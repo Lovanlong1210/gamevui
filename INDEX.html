@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .game-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .game-menu h2 {
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .game-menu button {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-menu button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            transform: scale(1);
+            transition: transform 0.3s ease;
+            display: none;
+            animation: containerAppear 0.5s ease-out;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        @keyframes containerAppear {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .game-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: titleGlow 2s infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255,255,255,0.8); }
+            50% { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px rgba(255,255,255,0.6); }
+        }
+
+        .game-stats {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .memory-game {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            perspective: 1000px;
+        }
+
+        .memory-card {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+        }
+
+        .memory-card.flip {
+            transform: rotateY(180deg);
+        }
+
+        .front-face,
+        .back-face {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            border-radius: 10px;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .front-face {
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            transform: rotateY(180deg);
+        }
+
+        .back-face {
+            background: linear-gradient(135deg, #2a5298, #1e3c72);
+            animation: cardPulse 2s infinite;
+        }
+
+        @keyframes cardPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .reset-button {
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: buttonPulse 2s infinite;
+        }
+
+        .reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        /* Style cho game Snake */
+        .snake-game {
+            width: 400px;
+            height: 400px;
+            border: 2px solid white;
+            position: relative;
+            background: #2c3e50;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .snake-cell {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            background: #27ae60;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(39, 174, 96, 0.5);
+        }
+
+        .snake-cell.head {
+            background: #2ecc71;
+            border-radius: 8px;
+            z-index: 2;
+        }
+
+        .snake-cell.head::before {
+            content: '👁️';
+            position: absolute;
+            font-size: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .snake-cell.tail {
+            background: #229954;
+            border-radius: 3px;
+        }
+
+        .snake-food {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            background: #e74c3c;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+            animation: pulse 1s infinite;
+        }
+
+        .snake-food::before {
+            content: '🍎';
+            position: absolute;
+            font-size: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .snake-game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .snake-game-over.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Style cho game Tic Tac Toe */
+        .tic-tac-toe {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 300px;
+            height: 300px;
+        }
+
+        .tic-tac-toe-cell {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .tic-tac-toe-cell:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .tic-tac-toe-cell.x {
+            background: rgba(255, 99, 71, 0.3);
+        }
+
+        .tic-tac-toe-cell.o {
+            background: rgba(65, 105, 225, 0.3);
+        }
+
+        .tic-tac-toe-cell.winner {
+            animation: winner 0.5s infinite;
+        }
+
+        @keyframes winner {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Style cho game Flappy Bird thay vì Tetris */
+        .flappy-game {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            border: 2px solid white;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+            border-radius: 10px;
+        }
+
+        .bird {
+            width: 40px;
+            height: 30px;
+            position: absolute;
+            background: #FFD700;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .bird::before {
+            content: '🐦';
+            position: absolute;
+            font-size: 25px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .pipe {
+            width: 60px;
+            position: absolute;
+            background: #4CAF50;
+            border: 2px solid #2E7D32;
+            border-radius: 5px;
+        }
+
+        .pipe.top {
+            top: 0;
+        }
+
+        .pipe.bottom {
+            bottom: 0;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 3;
+        }
+
+        /* Style cho game 2048 */
+        .game-2048 {
+            width: 400px;
+            height: 400px;
+            background: #BBADA0;
+            border-radius: 6px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .tile-2048 {
+            background: #EEE4DA;
+            border-radius: 3px;
+            text-align: center;
+            line-height: 85px;
+            font-size: 30px;
+            font-weight: bold;
+            transition: all 0.15s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: tilePop 0.3s ease-out;
+        }
+
+        @keyframes tilePop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Style cho Tetris */
+        .tetris-board {
+            width: 300px;
+            height: 600px;
+            background: #000;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+        }
+
+        .tetris-cell {
+            border: 1px solid #333;
+            aspect-ratio: 1;
+        }
+
+        /* Style cho Pac-Man */
+        .pacman-board {
+            width: 400px;
+            height: 400px;
+            background: #000;
+            position: relative;
+            border: 2px solid #fff;
+            border-radius: 10px;
+        }
+
+        .pacman {
+            width: 30px;
+            height: 30px;
+            background: yellow;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.1s;
+            animation: pacmanChomp 0.3s infinite;
+        }
+
+        @keyframes pacmanChomp {
+            0% { clip-path: polygon(50% 50%, 100% 0, 100% 100%); }
+            50% { clip-path: polygon(50% 50%, 100% 25%, 100% 75%); }
+            100% { clip-path: polygon(50% 50%, 100% 0, 100% 100%); }
+        }
+
+        .ghost {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.1s;
+            animation: ghostFloat 2s infinite ease-in-out;
+        }
+
+        @keyframes ghostFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            animation: dotPulse 1s infinite;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        /* Style cho Breakout */
+        .breakout-board {
+            width: 400px;
+            height: 600px;
+            background: #000;
+            position: relative;
+            border: 2px solid #fff;
+            border-radius: 10px;
+        }
+
+        .paddle {
+            width: 100px;
+            height: 20px;
+            background: #fff;
+            position: absolute;
+            bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .ball {
+            width: 15px;
+            height: 15px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            animation: ballSpin 1s infinite linear;
+        }
+
+        @keyframes ballSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .brick {
+            width: 80px;
+            height: 20px;
+            position: absolute;
+            border-radius: 3px;
+            animation: brickAppear 0.5s ease-out;
+        }
+
+        @keyframes brickAppear {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Style cho Whack-a-Mole */
+        .whackamole-board {
+            width: 400px;
+            height: 400px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background: #4CAF50; /* Màu xanh lá tươi sáng */
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .mole-hole {
+            background: #2E7D32; /* Màu xanh lá đậm */
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .mole-hole:hover {
+            transform: scale(1.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        .mole {
+            width: 80%;
+            height: 80%;
+            background: #FF5722; /* Màu cam tươi sáng */
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            transition: transform 0.3s;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .mole.active {
+            transform: translate(-50%, -50%);
+            background: #FF9800; /* Màu cam nhạt hơn khi xuất hiện */
+        }
+
+        .mole.hit {
+            animation: moleHit 0.5s;
+            background: #F44336; /* Màu đỏ khi bị đập */
+        }
+
+        @keyframes moleHit {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(0); }
+        }
+
+        /* Style cho Word Puzzle */
+        .word-puzzle {
+            width: 400px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .letter-cell {
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            font-weight: bold;
+            animation: cellPop 0.3s ease-out;
+        }
+
+        @keyframes cellPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .letter-cell:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .letter-cell.selected {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+            animation: cellSelected 0.5s infinite alternate;
+        }
+
+        @keyframes cellSelected {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(255,255,255,0.3); }
+            100% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-menu">
+        <h2>Chọn Game</h2>
+        <button onclick="showGame('memory')">Memory Card</button>
+        <button onclick="showGame('snake')">Snake Game</button>
+        <button onclick="showGame('tictactoe')">Tic Tac Toe</button>
+        <button onclick="showGame('flappy')">Flappy Bird</button>
+        <button onclick="showGame('2048')">2048</button>
+        <button onclick="showGame('tetris')">Tetris</button>
+        <button onclick="showGame('pacman')">Pac-Man</button>
+        <button onclick="showGame('breakout')">Breakout</button>
+        <button onclick="showGame('whackamole')">Whack-a-Mole</button>
+        <button onclick="showGame('wordpuzzle')">Word Puzzle</button>
+    </div>
+
+    <button class="sound-toggle" onclick="toggleSound()">🔊</button>
+
+    <!-- Memory Card Game -->
+    <div id="memory-game" class="game-container active">
+        <h1 class="game-title">Memory Card Game</h1>
+        <div class="game-stats">
+            <span>Lượt chơi: <span id="moves">0</span></span>
+            <span>Thời gian: <span id="time">0</span>s</span>
+        </div>
+        <div class="memory-game" id="gameBoard"></div>
+        <button class="reset-button" onclick="resetGame()">Chơi lại</button>
+    </div>
+
+    <!-- Snake Game -->
+    <div id="snake-game" class="game-container">
+        <h1 class="game-title">Snake Game</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="snake-score">0</span></span>
+        </div>
+        <div class="speed-control">
+            <label for="speed-slider">Tốc độ:</label>
+            <input type="range" id="speed-slider" class="speed-slider" min="50" max="200" value="100" step="10">
+            <span class="speed-value">100</span>
+            <div class="speed-label">
+                <span>Chậm</span>
+                <span>Nhanh</span>
+            </div>
+        </div>
+        <div class="snake-game" id="snakeBoard"></div>
+        <button class="reset-button" onclick="resetSnakeGame()">Chơi lại</button>
+    </div>
+
+    <!-- Tic Tac Toe -->
+    <div id="tictactoe-game" class="game-container">
+        <h1 class="game-title">Tic Tac Toe</h1>
+        <div class="game-stats">
+            <span>Lượt: <span id="tictactoe-turn">X</span></span>
+        </div>
+        <div class="tic-tac-toe" id="tictactoeBoard"></div>
+        <button class="reset-button" onclick="resetTicTacToe()">Chơi lại</button>
+    </div>
+
+    <!-- Flappy Bird -->
+    <div id="flappy-game" class="game-container">
+        <h1 class="game-title">Flappy Bird</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="flappy-score">0</span></span>
+        </div>
+        <div class="flappy-game" id="flappyBoard">
+            <div class="bird" id="bird"></div>
+        </div>
+        <button class="reset-button" onclick="resetFlappy()">Chơi lại</button>
+    </div>
+
+    <!-- 2048 -->
+    <div id="2048-game" class="game-container">
+        <h1 class="game-title">2048</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="2048-score">0</span></span>
+        </div>
+        <div class="game-2048" id="2048Board"></div>
+        <button class="reset-button" onclick="reset2048()">Chơi lại</button>
+    </div>
+
+    <!-- Tetris -->
+    <div id="tetris-game" class="game-container">
+        <h1 class="game-title">Tetris</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="tetris-score">0</span></span>
+            <span>Level: <span id="tetris-level">1</span></span>
+        </div>
+        <div class="tetris-board" id="tetrisBoard"></div>
+        <button class="reset-button" onclick="resetTetris()">Chơi lại</button>
+    </div>
+
+    <!-- Pac-Man -->
+    <div id="pacman-game" class="game-container">
+        <h1 class="game-title">Pac-Man</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="pacman-score">0</span></span>
+        </div>
+        <div class="pacman-board" id="pacmanBoard"></div>
+        <button class="reset-button" onclick="resetPacman()">Chơi lại</button>
+    </div>
+
+    <!-- Breakout -->
+    <div id="breakout-game" class="game-container">
+        <h1 class="game-title">Breakout</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="breakout-score">0</span></span>
+        </div>
+        <div class="breakout-board" id="breakoutBoard"></div>
+        <button class="reset-button" onclick="resetBreakout()">Chơi lại</button>
+    </div>
+
+    <!-- Whack-a-Mole -->
+    <div id="whackamole-game" class="game-container">
+        <h1 class="game-title">Whack-a-Mole</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="whack-score">0</span></span>
+            <span>Thời gian: <span id="whack-time">30</span>s</span>
+        </div>
+        <div class="whackamole-board" id="whackamoleBoard"></div>
+        <button class="reset-button" onclick="resetWhackAMole()">Chơi lại</button>
+    </div>
+
+    <!-- Word Puzzle -->
+    <div id="wordpuzzle-game" class="game-container">
+        <h1 class="game-title">Word Puzzle</h1>
+        <div class="game-stats">
+            <span>Điểm: <span id="wordpuzzle-score">0</span></span>
+        </div>
+        <div class="word-puzzle">
+            <div class="letter-grid" id="wordPuzzleBoard"></div>
+        </div>
+        <button class="reset-button" onclick="resetWordPuzzle()">Chơi lại</button>
+    </div>
+
+    <script>
+        const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+        let cards = [...emojis, ...emojis];
+        let moves = 0;
+        let time = 0;
+        let timer;
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let isSoundOn = true;
+
+        // Âm thanh
+        const flipSound = new Audio('sounds/flip.mp3');
+        const matchSound = new Audio('sounds/match.mp3');
+        const winSound = new Audio('sounds/win.mp3');
+
+        // Tải trước âm thanh
+        function preloadSounds() {
+            flipSound.load();
+            matchSound.load();
+            winSound.load();
+        }
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            document.querySelector('.sound-toggle').textContent = isSoundOn ? '🔊' : '🔇';
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createCard(emoji) {
+            const card = document.createElement('div');
+            card.classList.add('memory-card');
+            card.innerHTML = `
+                <div class="front-face">${emoji}</div>
+                <div class="back-face">?</div>
+            `;
+            card.addEventListener('click', () => flipCard(card));
+            return card;
+        }
+
+        function flipCard(card) {
+            if (flippedCards.length === 2) return;
+            if (flippedCards.includes(card)) return;
+
+            if (isSoundOn) {
+                flipSound.currentTime = 0;
+                flipSound.play();
+            }
+
+            card.classList.add('flip');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const match = card1.querySelector('.front-face').textContent === 
+                         card2.querySelector('.front-face').textContent;
+
+            if (match) {
+                if (isSoundOn) {
+                    matchSound.currentTime = 0;
+                    matchSound.play();
+                }
+                matchedPairs++;
+                flippedCards = [];
+                if (matchedPairs === emojis.length) {
+                    clearInterval(timer);
+                    if (isSoundOn) {
+                        winSound.currentTime = 0;
+                        winSound.play();
+                    }
+                    createConfetti();
+                    setTimeout(() => {
+                        alert(`Chúc mừng! Bạn đã hoàn thành với ${moves} lượt và ${time} giây!`);
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flip');
+                    card2.classList.remove('flip');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                time++;
+                document.getElementById('time').textContent = time;
+            }, 1000);
+        }
+
+        function resetGame() {
+            clearInterval(timer);
+            moves = 0;
+            time = 0;
+            matchedPairs = 0;
+            flippedCards = [];
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('time').textContent = '0';
+            
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            cards = shuffle([...emojis, ...emojis]);
+            cards.forEach(emoji => {
+                gameBoard.appendChild(createCard(emoji));
+            });
+            
+            startTimer();
+        }
+
+        // Hàm chuyển đổi giữa các game
+        function showGame(gameId) {
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.getElementById(`${gameId}-game`).classList.add('active');
+            
+            // Khởi tạo game tương ứng
+            switch(gameId) {
+                case '2048': init2048(); break;
+                case 'tetris': initTetris(); break;
+                case 'pacman': initPacman(); break;
+                case 'breakout': initBreakout(); break;
+                case 'whackamole': initWhackAMole(); break;
+                case 'wordpuzzle': initWordPuzzle(); break;
+            }
+        }
+
+        // Snake Game
+        let snake = [{x: 10, y: 10}];
+        let food = {x: 15, y: 15};
+        let direction = 'right';
+        let snakeGameInterval;
+        let snakeScore = 0;
+        let gameSpeed = 100;
+        let isGameOver = false;
+        let isAutoSpeed = true; // Tự động tăng tốc khi ăn thức ăn
+
+        // Thêm event listener cho thanh trượt tốc độ
+        document.getElementById('speed-slider').addEventListener('input', function(e) {
+            gameSpeed = 250 - e.target.value; // Đảo ngược giá trị để slider hoạt động trực quan hơn
+            document.querySelector('.speed-value').textContent = e.target.value;
+            if (!isGameOver) {
+                clearInterval(snakeGameInterval);
+                snakeGameInterval = setInterval(moveSnake, gameSpeed);
+            }
+        });
+
+        function initSnakeGame() {
+            const board = document.getElementById('snakeBoard');
+            board.innerHTML = '';
+            
+            // Vẽ rắn
+            snake.forEach((segment, index) => {
+                const cell = document.createElement('div');
+                cell.classList.add('snake-cell');
+                
+                // Thêm class cho đầu và đuôi
+                if (index === 0) {
+                    cell.classList.add('head');
+                    // Xoay đầu rắn theo hướng di chuyển
+                    const rotation = {
+                        'up': '-90deg',
+                        'down': '90deg',
+                        'left': '180deg',
+                        'right': '0deg'
+                    }[direction];
+                    cell.style.transform = `rotate(${rotation})`;
+                } else if (index === snake.length - 1) {
+                    cell.classList.add('tail');
+                }
+                
+                cell.style.left = `${segment.x * 20}px`;
+                cell.style.top = `${segment.y * 20}px`;
+                board.appendChild(cell);
+            });
+
+            // Vẽ thức ăn
+            const foodElement = document.createElement('div');
+            foodElement.classList.add('snake-food');
+            foodElement.style.left = `${food.x * 20}px`;
+            foodElement.style.top = `${food.y * 20}px`;
+            board.appendChild(foodElement);
+
+            // Hiển thị game over nếu thua
+            if (isGameOver) {
+                const gameOverElement = document.createElement('div');
+                gameOverElement.classList.add('snake-game-over', 'show');
+                gameOverElement.innerHTML = `
+                    <h2>Game Over!</h2>
+                    <p>Điểm: ${snakeScore}</p>
+                    <button class="reset-button" onclick="resetSnakeGame()">Chơi lại</button>
+                `;
+                board.appendChild(gameOverElement);
+            }
+        }
+
+        function moveSnake() {
+            if (isGameOver) return;
+
+            const head = {...snake[0]};
+            
+            switch(direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+
+            // Kiểm tra va chạm với tường
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
+                gameOver();
+                return;
+            }
+
+            // Kiểm tra va chạm với thân rắn
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOver();
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                snakeScore += 10;
+                document.getElementById('snake-score').textContent = snakeScore;
+                generateFood();
+                // Tăng tốc độ game nếu đang ở chế độ tự động
+                if (isAutoSpeed && gameSpeed > 50) {
+                    gameSpeed -= 2;
+                    clearInterval(snakeGameInterval);
+                    snakeGameInterval = setInterval(moveSnake, gameSpeed);
+                }
+            } else {
+                snake.pop();
+            }
+
+            initSnakeGame();
+        }
+
+        function generateFood() {
+            do {
+                food = {
+                    x: Math.floor(Math.random() * 20),
+                    y: Math.floor(Math.random() * 20)
+                };
+            } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
+        }
+
+        function gameOver() {
+            clearInterval(snakeGameInterval);
+            isGameOver = true;
+            initSnakeGame();
+        }
+
+        function resetSnakeGame() {
+            snake = [{x: 10, y: 10}];
+            direction = 'right';
+            snakeScore = 0;
+            gameSpeed = 250 - document.getElementById('speed-slider').value;
+            isGameOver = false;
+            document.getElementById('snake-score').textContent = '0';
+            generateFood();
+            clearInterval(snakeGameInterval);
+            snakeGameInterval = setInterval(moveSnake, gameSpeed);
+            initSnakeGame();
+        }
+
+        // Tic Tac Toe
+        let currentPlayer = 'X';
+        let ticTacToeBoard = Array(9).fill('');
+        const PLAYER_SYMBOLS = {
+            'X': '🐯', // Hổ cho người chơi X
+            'O': '🦁'  // Sư tử cho người chơi O
+        };
+
+        function initTicTacToe() {
+            const board = document.getElementById('tictactoeBoard');
+            board.innerHTML = '';
+            ticTacToeBoard.forEach((cell, index) => {
+                const button = document.createElement('button');
+                button.classList.add('tic-tac-toe-cell');
+                if (cell) {
+                    button.textContent = PLAYER_SYMBOLS[cell];
+                    button.classList.add(cell.toLowerCase());
+                }
+                button.onclick = () => makeMove(index);
+                board.appendChild(button);
+            });
+        }
+
+        function makeMove(index) {
+            if (ticTacToeBoard[index] === '') {
+                ticTacToeBoard[index] = currentPlayer;
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                document.getElementById('tictactoe-turn').textContent = PLAYER_SYMBOLS[currentPlayer];
+                initTicTacToe();
+                checkWinner();
+            }
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0,1,2], [3,4,5], [6,7,8], // rows
+                [0,3,6], [1,4,7], [2,5,8], // columns
+                [0,4,8], [2,4,6] // diagonals
+            ];
+
+            for (let pattern of winPatterns) {
+                const [a,b,c] = pattern;
+                if (ticTacToeBoard[a] && 
+                    ticTacToeBoard[a] === ticTacToeBoard[b] && 
+                    ticTacToeBoard[a] === ticTacToeBoard[c]) {
+                    // Thêm hiệu ứng cho ô thắng
+                    const cells = document.querySelectorAll('.tic-tac-toe-cell');
+                    cells[a].classList.add('winner');
+                    cells[b].classList.add('winner');
+                    cells[c].classList.add('winner');
+                    setTimeout(() => {
+                        alert(`Chúc mừng ${PLAYER_SYMBOLS[ticTacToeBoard[a]]} đã chiến thắng!`);
+                    }, 500);
+                    return;
+                }
+            }
+
+            if (!ticTacToeBoard.includes('')) {
+                alert('Hòa!');
+            }
+        }
+
+        function resetTicTacToe() {
+            ticTacToeBoard = Array(9).fill('');
+            currentPlayer = 'X';
+            document.getElementById('tictactoe-turn').textContent = PLAYER_SYMBOLS['X'];
+            initTicTacToe();
+        }
+
+        // Flappy Bird
+        let bird = {
+            x: 50,
+            y: 300,
+            velocity: 0,
+            gravity: 0.5,
+            jump: -8
+        };
+        let pipes = [];
+        let flappyScore = 0;
+        let flappyInterval;
+        let gameStarted = false;
+
+        function initFlappy() {
+            const board = document.getElementById('flappyBoard');
+            board.innerHTML = '';
+            
+            // Tạo chim
+            const birdElement = document.createElement('div');
+            birdElement.id = 'bird';
+            birdElement.className = 'bird';
+            birdElement.style.left = `${bird.x}px`;
+            birdElement.style.top = `${bird.y}px`;
+            birdElement.style.transform = `rotate(${bird.velocity * 3}deg)`;
+            board.appendChild(birdElement);
+
+            // Tạo ống
+            pipes.forEach(pipe => {
+                const pipeTop = document.createElement('div');
+                pipeTop.className = 'pipe top';
+                pipeTop.style.height = `${pipe.topHeight}px`;
+                pipeTop.style.left = `${pipe.x}px`;
+                
+                const pipeBottom = document.createElement('div');
+                pipeBottom.className = 'pipe bottom';
+                pipeBottom.style.height = `${pipe.bottomHeight}px`;
+                pipeBottom.style.left = `${pipe.x}px`;
+                
+                board.appendChild(pipeTop);
+                board.appendChild(pipeBottom);
+            });
+
+            // Màn hình bắt đầu
+            if (!gameStarted) {
+                const startScreen = document.createElement('div');
+                startScreen.className = 'start-screen';
+                startScreen.innerHTML = `
+                    <h2>Flappy Bird</h2>
+                    <p>Nhấn SPACE để bắt đầu</p>
+                `;
+                board.appendChild(startScreen);
+            }
+        }
+
+        function createPipe() {
+            const gap = 150;
+            const minHeight = 50;
+            const maxHeight = 400;
+            const height = Math.random() * (maxHeight - minHeight) + minHeight;
+            
+            pipes.push({
+                x: 400,
+                topHeight: height,
+                bottomHeight: 600 - height - gap,
+                passed: false
+            });
+        }
+
+        function updateFlappy() {
+            if (!gameStarted) return;
+
+            // Cập nhật vị trí chim
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Kiểm tra va chạm với đất và trần
+            if (bird.y > 570 || bird.y < 0) {
+                gameOverFlappy();
+                return;
+            }
+
+            // Cập nhật vị trí ống
+            pipes.forEach(pipe => {
+                pipe.x -= 2;
+
+                // Kiểm tra va chạm với ống
+                if (bird.x + 40 > pipe.x && bird.x < pipe.x + 60) {
+                    if (bird.y < pipe.topHeight || bird.y + 30 > 600 - pipe.bottomHeight) {
+                        gameOverFlappy();
+                        return;
+                    }
+                }
+
+                // Tính điểm
+                if (pipe.x + 60 < bird.x && !pipe.passed) {
+                    pipe.passed = true;
+                    flappyScore++;
+                    document.getElementById('flappy-score').textContent = flappyScore;
+                }
+            });
+
+            // Xóa ống đã đi qua
+            pipes = pipes.filter(pipe => pipe.x > -60);
+
+            // Tạo ống mới
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < 200) {
+                createPipe();
+            }
+
+            initFlappy();
+        }
+
+        function jump() {
+            if (!gameStarted) {
+                gameStarted = true;
+                flappyInterval = setInterval(updateFlappy, 20);
+            }
+            bird.velocity = bird.jump;
+        }
+
+        function gameOverFlappy() {
+            clearInterval(flappyInterval);
+            gameStarted = false;
+            alert(`Game Over! Điểm: ${flappyScore}`);
+            resetFlappy();
+        }
+
+        function resetFlappy() {
+            // Reset tất cả các biến về trạng thái ban đầu
+            bird = {
+                x: 50,
+                y: 300,
+                velocity: 0,
+                gravity: 0.5,
+                jump: -8
+            };
+            pipes = [];
+            flappyScore = 0;
+            gameStarted = false;
+            document.getElementById('flappy-score').textContent = '0';
+            clearInterval(flappyInterval);
+            initFlappy();
+        }
+
+        // Event Listeners
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('flappy-game').classList.contains('active')) {
+                if (e.code === 'Space') {
+                    jump();
+                }
+            }
+        });
+
+        // Khởi tạo các game
+        initTicTacToe();
+        resetFlappy();
+
+        // Code cho game 2048
+        let board2048 = Array(16).fill(0);
+        let score2048 = 0;
+        let gameOver2048 = false;
+
+        function init2048() {
+            const board = document.getElementById('2048Board');
+            board.innerHTML = '';
+            
+            board2048.forEach((value, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile-2048';
+                if (value !== 0) {
+                    tile.textContent = value;
+                    tile.style.backgroundColor = getTileColor(value);
+                }
+                board.appendChild(tile);
+            });
+
+            // Thêm 2 số ngẫu nhiên ban đầu
+            addRandomTile();
+            addRandomTile();
+        }
+
+        function getTileColor(value) {
+            const colors = {
+                2: '#eee4da',
+                4: '#ede0c8',
+                8: '#f2b179',
+                16: '#f59563',
+                32: '#f67c5f',
+                64: '#f65e3b',
+                128: '#edcf72',
+                256: '#edcc61',
+                512: '#edc850',
+                1024: '#edc53f',
+                2048: '#edc22e'
+            };
+            return colors[value] || '#cdc1b4';
+        }
+
+        function addRandomTile() {
+            const emptyCells = board2048.map((value, index) => value === 0 ? index : -1)
+                                      .filter(index => index !== -1);
+            if (emptyCells.length > 0) {
+                const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                board2048[randomIndex] = Math.random() < 0.9 ? 2 : 4;
+            }
+        }
+
+        function moveTiles(direction) {
+            if (gameOver2048) return;
+
+            let moved = false;
+            const oldBoard = [...board2048];
+
+            // Xử lý di chuyển
+            if (direction === 'left' || direction === 'right') {
+                for (let row = 0; row < 4; row++) {
+                    const rowTiles = board2048.slice(row * 4, (row + 1) * 4);
+                    const newRow = mergeTiles(direction === 'left' ? rowTiles : rowTiles.reverse());
+                    if (direction === 'right') newRow.reverse();
+                    for (let col = 0; col < 4; col++) {
+                        board2048[row * 4 + col] = newRow[col];
+                    }
+                    if (JSON.stringify(rowTiles) !== JSON.stringify(newRow)) moved = true;
+                }
+            } else {
+                for (let col = 0; col < 4; col++) {
+                    const colTiles = [board2048[col], board2048[col + 4], board2048[col + 8], board2048[col + 12]];
+                    const newCol = mergeTiles(direction === 'up' ? colTiles : colTiles.reverse());
+                    if (direction === 'down') newCol.reverse();
+                    for (let row = 0; row < 4; row++) {
+                        board2048[row * 4 + col] = newCol[row];
+                    }
+                    if (JSON.stringify(colTiles) !== JSON.stringify(newCol)) moved = true;
+                }
+            }
+
+            if (moved) {
+                addRandomTile();
+                updateScore();
+                init2048();
+                checkGameOver();
+            }
+        }
+
+        function mergeTiles(tiles) {
+            // Loại bỏ các ô trống
+            let merged = tiles.filter(tile => tile !== 0);
+            
+            // Gộp các ô giống nhau
+            for (let i = 0; i < merged.length - 1; i++) {
+                if (merged[i] === merged[i + 1]) {
+                    merged[i] *= 2;
+                    score2048 += merged[i];
+                    merged.splice(i + 1, 1);
+                }
+            }
+            
+            // Thêm các ô trống vào cuối
+            while (merged.length < 4) {
+                merged.push(0);
+            }
+            
+            return merged;
+        }
+
+        function updateScore() {
+            document.getElementById('2048-score').textContent = score2048;
+        }
+
+        function checkGameOver() {
+            // Kiểm tra còn ô trống không
+            if (board2048.includes(0)) return;
+
+            // Kiểm tra còn nước đi không
+            for (let i = 0; i < 16; i++) {
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                const current = board2048[i];
+
+                // Kiểm tra ô bên phải
+                if (col < 3 && current === board2048[i + 1]) return;
+                // Kiểm tra ô bên dưới
+                if (row < 3 && current === board2048[i + 4]) return;
+            }
+
+            gameOver2048 = true;
+            alert(`Game Over! Điểm: ${score2048}`);
+        }
+
+        function reset2048() {
+            board2048 = Array(16).fill(0);
+            score2048 = 0;
+            gameOver2048 = false;
+            document.getElementById('2048-score').textContent = '0';
+            init2048();
+        }
+
+        // Thêm event listener cho phím điều khiển
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('2048-game').classList.contains('active')) {
+                switch(e.key) {
+                    case 'ArrowLeft': moveTiles('left'); break;
+                    case 'ArrowRight': moveTiles('right'); break;
+                    case 'ArrowUp': moveTiles('up'); break;
+                    case 'ArrowDown': moveTiles('down'); break;
+                }
+            }
+        });
+
+        // Code cho Tetris
+        const SHAPES = [
+            [[1,1,1,1]], // I
+            [[1,1],[1,1]], // O
+            [[1,1,1],[0,1,0]], // T
+            [[1,1,1],[1,0,0]], // L
+            [[1,1,1],[0,0,1]], // J
+            [[1,1,0],[0,1,1]], // S
+            [[0,1,1],[1,1,0]]  // Z
+        ];
+
+        const COLORS = ['#00f0f0', '#f0f000', '#a000f0', '#f0a000', '#0000f0', '#00f000', '#f00000'];
+
+        let tetrisBoard = Array(20).fill().map(() => Array(10).fill(0));
+        let currentPiece = null;
+        let currentPos = {x: 0, y: 0};
+        let tetrisScore = 0;
+        let tetrisLevel = 1;
+        let tetrisInterval;
+        let tetrisGameSpeed = 1000;  // Đổi tên biến để tránh trùng lặp
+
+        function initTetris() {
+            const board = document.getElementById('tetrisBoard');
+            board.innerHTML = '';
+            
+            tetrisBoard.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    const div = document.createElement('div');
+                    div.className = 'tetris-cell';
+                    if (cell) {
+                        div.style.backgroundColor = COLORS[cell - 1];
+                    }
+                    board.appendChild(div);
+                });
+            });
+        }
+
+        function newPiece() {
+            const shapeIndex = Math.floor(Math.random() * SHAPES.length);
+            currentPiece = {
+                shape: SHAPES[shapeIndex],
+                color: shapeIndex + 1
+            };
+            currentPos = {
+                x: Math.floor(10/2) - Math.floor(currentPiece.shape[0].length/2),
+                y: 0
+            };
+            
+            if (checkCollision()) {
+                gameOverTetris();
+            }
+        }
+
+        function checkCollision() {
+            for (let y = 0; y < currentPiece.shape.length; y++) {
+                for (let x = 0; x < currentPiece.shape[y].length; x++) {
+                    if (currentPiece.shape[y][x]) {
+                        const boardX = currentPos.x + x;
+                        const boardY = currentPos.y + y;
+                        if (boardX < 0 || boardX >= 10 || boardY >= 20 || 
+                            (boardY >= 0 && tetrisBoard[boardY][boardX])) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function mergePiece() {
+            for (let y = 0; y < currentPiece.shape.length; y++) {
+                for (let x = 0; x < currentPiece.shape[y].length; x++) {
+                    if (currentPiece.shape[y][x]) {
+                        tetrisBoard[currentPos.y + y][currentPos.x + x] = currentPiece.color;
+                    }
+                }
+            }
+        }
+
+        function clearLines() {
+            let linesCleared = 0;
+            for (let y = 19; y >= 0; y--) {
+                if (tetrisBoard[y].every(cell => cell !== 0)) {
+                    tetrisBoard.splice(y, 1);
+                    tetrisBoard.unshift(Array(10).fill(0));
+                    linesCleared++;
+                    y++;
+                }
+            }
+            if (linesCleared > 0) {
+                tetrisScore += linesCleared * 100 * tetrisLevel;
+                document.getElementById('tetris-score').textContent = tetrisScore;
+                if (tetrisScore >= tetrisLevel * 1000) {
+                    tetrisLevel++;
+                    document.getElementById('tetris-level').textContent = tetrisLevel;
+                    tetrisGameSpeed = Math.max(100, 1000 - (tetrisLevel - 1) * 100);
+                    clearInterval(tetrisInterval);
+                    tetrisInterval = setInterval(moveDown, tetrisGameSpeed);
+                }
+            }
+        }
+
+        function moveDown() {
+            currentPos.y++;
+            if (checkCollision()) {
+                currentPos.y--;
+                mergePiece();
+                clearLines();
+                newPiece();
+            }
+            initTetris();
+        }
+
+        function moveLeft() {
+            currentPos.x--;
+            if (checkCollision()) {
+                currentPos.x++;
+            }
+            initTetris();
+        }
+
+        function moveRight() {
+            currentPos.x++;
+            if (checkCollision()) {
+                currentPos.x--;
+            }
+            initTetris();
+        }
+
+        function rotate() {
+            const oldShape = currentPiece.shape;
+            currentPiece.shape = currentPiece.shape[0].map((_, i) =>
+                currentPiece.shape.map(row => row[i]).reverse()
+            );
+            if (checkCollision()) {
+                currentPiece.shape = oldShape;
+            }
+            initTetris();
+        }
+
+        function gameOverTetris() {
+            clearInterval(tetrisInterval);
+            alert(`Game Over! Điểm: ${tetrisScore}`);
+        }
+
+        function resetTetris() {
+            tetrisBoard = Array(20).fill().map(() => Array(10).fill(0));
+            tetrisScore = 0;
+            tetrisLevel = 1;
+            tetrisGameSpeed = 1000;
+            document.getElementById('tetris-score').textContent = '0';
+            document.getElementById('tetris-level').textContent = '1';
+            clearInterval(tetrisInterval);
+            newPiece();
+            tetrisInterval = setInterval(moveDown, tetrisGameSpeed);
+            initTetris();
+        }
+
+        // Code cho Pac-Man
+        let pacman = {
+            x: 10,
+            y: 10,
+            direction: 'right',
+            mouthOpen: true
+        };
+        let ghosts = [
+            {x: 8, y: 8, color: 'red'},
+            {x: 9, y: 8, color: 'pink'},
+            {x: 10, y: 8, color: 'cyan'},
+            {x: 11, y: 8, color: 'orange'}
+        ];
+        let dots = [];
+        let pacmanScore = 0;
+        let pacmanInterval;
+
+        function initPacman() {
+            const board = document.getElementById('pacmanBoard');
+            board.innerHTML = '';
+            
+            // Vẽ Pac-Man
+            const pacmanElement = document.createElement('div');
+            pacmanElement.className = 'pacman';
+            pacmanElement.style.left = `${pacman.x * 20}px`;
+            pacmanElement.style.top = `${pacman.y * 20}px`;
+            pacmanElement.style.transform = `rotate(${
+                {right: 0, down: 90, left: 180, up: 270}[pacman.direction]
+            }deg)`;
+            board.appendChild(pacmanElement);
+
+            // Vẽ ma
+            ghosts.forEach(ghost => {
+                const ghostElement = document.createElement('div');
+                ghostElement.className = 'ghost';
+                ghostElement.style.left = `${ghost.x * 20}px`;
+                ghostElement.style.top = `${ghost.y * 20}px`;
+                ghostElement.style.backgroundColor = ghost.color;
+                board.appendChild(ghostElement);
+            });
+
+            // Vẽ chấm
+            dots.forEach(dot => {
+                const dotElement = document.createElement('div');
+                dotElement.className = 'dot';
+                dotElement.style.left = `${dot.x * 20}px`;
+                dotElement.style.top = `${dot.y * 20}px`;
+                board.appendChild(dotElement);
+            });
+        }
+
+        function movePacman() {
+            const oldX = pacman.x;
+            const oldY = pacman.y;
+
+            switch(pacman.direction) {
+                case 'right': pacman.x++; break;
+                case 'left': pacman.x--; break;
+                case 'up': pacman.y--; break;
+                case 'down': pacman.y++; break;
+            }
+
+            // Kiểm tra va chạm với tường
+            if (pacman.x < 0 || pacman.x >= 20 || pacman.y < 0 || pacman.y >= 20) {
+                pacman.x = oldX;
+                pacman.y = oldY;
+            }
+
+            // Kiểm tra ăn chấm
+            dots = dots.filter(dot => {
+                if (dot.x === pacman.x && dot.y === pacman.y) {
+                    pacmanScore += 10;
+                    document.getElementById('pacman-score').textContent = pacmanScore;
+                    return false;
+                }
+                return true;
+            });
+
+            // Kiểm tra va chạm với ma
+            if (ghosts.some(ghost => ghost.x === pacman.x && ghost.y === pacman.y)) {
+                gameOverPacman();
+            }
+
+            // Di chuyển ma
+            ghosts.forEach(ghost => {
+                const directions = ['up', 'down', 'left', 'right'];
+                const direction = directions[Math.floor(Math.random() * directions.length)];
+                const oldGhostX = ghost.x;
+                const oldGhostY = ghost.y;
+
+                switch(direction) {
+                    case 'right': ghost.x++; break;
+                    case 'left': ghost.x--; break;
+                    case 'up': ghost.y--; break;
+                    case 'down': ghost.y++; break;
+                }
+
+                if (ghost.x < 0 || ghost.x >= 20 || ghost.y < 0 || ghost.y >= 20) {
+                    ghost.x = oldGhostX;
+                    ghost.y = oldGhostY;
+                }
+            });
+
+            initPacman();
+        }
+
+        function gameOverPacman() {
+            clearInterval(pacmanInterval);
+            alert(`Game Over! Điểm: ${pacmanScore}`);
+        }
+
+        function resetPacman() {
+            pacman = {x: 10, y: 10, direction: 'right', mouthOpen: true};
+            ghosts = [
+                {x: 8, y: 8, color: 'red'},
+                {x: 9, y: 8, color: 'pink'},
+                {x: 10, y: 8, color: 'cyan'},
+                {x: 11, y: 8, color: 'orange'}
+            ];
+            dots = [];
+            for (let x = 0; x < 20; x++) {
+                for (let y = 0; y < 20; y++) {
+                    if (Math.random() < 0.7) {
+                        dots.push({x, y});
+                    }
+                }
+            }
+            pacmanScore = 0;
+            document.getElementById('pacman-score').textContent = '0';
+            clearInterval(pacmanInterval);
+            pacmanInterval = setInterval(movePacman, 200);
+            initPacman();
+        }
+
+        // Code cho Breakout
+        let paddle = {x: 150, width: 100};
+        let ball = {x: 200, y: 300, dx: 2, dy: -2};
+        let bricks = [];
+        let breakoutScore = 0;
+        let breakoutInterval;
+
+        function initBreakout() {
+            const board = document.getElementById('breakoutBoard');
+            board.innerHTML = '';
+            
+            // Vẽ paddle
+            const paddleElement = document.createElement('div');
+            paddleElement.className = 'paddle';
+            paddleElement.style.left = `${paddle.x}px`;
+            board.appendChild(paddleElement);
+
+            // Vẽ bóng
+            const ballElement = document.createElement('div');
+            ballElement.className = 'ball';
+            ballElement.style.left = `${ball.x}px`;
+            ballElement.style.top = `${ball.y}px`;
+            board.appendChild(ballElement);
+
+            // Vẽ gạch
+            bricks.forEach(brick => {
+                const brickElement = document.createElement('div');
+                brickElement.className = 'brick';
+                brickElement.style.left = `${brick.x}px`;
+                brickElement.style.top = `${brick.y}px`;
+                brickElement.style.backgroundColor = brick.color;
+                board.appendChild(brickElement);
+            });
+        }
+
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Kiểm tra va chạm với tường
+            if (ball.x < 0 || ball.x > 385) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.y < 0) {
+                ball.dy = -ball.dy;
+            }
+
+            // Kiểm tra va chạm với paddle
+            if (ball.y > 580 && ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                ball.dy = -ball.dy;
+            }
+
+            // Kiểm tra va chạm với gạch
+            bricks = bricks.filter(brick => {
+                if (ball.x > brick.x && ball.x < brick.x + 80 && 
+                    ball.y > brick.y && ball.y < brick.y + 20) {
+                    ball.dy = -ball.dy;
+                    breakoutScore += 10;
+                    document.getElementById('breakout-score').textContent = breakoutScore;
+                    return false;
+                }
+                return true;
+            });
+
+            // Kiểm tra thua
+            if (ball.y > 600) {
+                gameOverBreakout();
+            }
+
+            // Kiểm tra thắng
+            if (bricks.length === 0) {
+                alert(`Chúc mừng! Bạn đã thắng với ${breakoutScore} điểm!`);
+                resetBreakout();
+            }
+
+            initBreakout();
+        }
+
+        function gameOverBreakout() {
+            clearInterval(breakoutInterval);
+            alert(`Game Over! Điểm: ${breakoutScore}`);
+        }
+
+        function resetBreakout() {
+            paddle = {x: 150, width: 100};
+            ball = {x: 200, y: 300, dx: 2, dy: -2};
+            bricks = [];
+            for (let x = 0; x < 400; x += 80) {
+                for (let y = 0; y < 100; y += 20) {
+                    bricks.push({
+                        x,
+                        y,
+                        color: `hsl(${Math.random() * 360}, 70%, 50%)`
+                    });
+                }
+            }
+            breakoutScore = 0;
+            document.getElementById('breakout-score').textContent = '0';
+            clearInterval(breakoutInterval);
+            breakoutInterval = setInterval(moveBall, 10);
+            initBreakout();
+        }
+
+        // Code cho Whack-a-Mole
+        let moles = Array(9).fill(false);
+        let whackScore = 0;
+        let whackTime = 30;
+        let whackInterval;
+
+        function initWhackAMole() {
+            const board = document.getElementById('whackamoleBoard');
+            board.innerHTML = '';
+            
+            moles.forEach((mole, index) => {
+                const hole = document.createElement('div');
+                hole.className = 'mole-hole';
+                if (mole) {
+                    const moleElement = document.createElement('div');
+                    moleElement.className = 'mole';
+                    hole.appendChild(moleElement);
+                }
+                hole.onclick = () => whackMole(index);
+                board.appendChild(hole);
+            });
+        }
+
+        function whackMole(index) {
+            if (moles[index]) {
+                moles[index] = false;
+                whackScore += 10;
+                document.getElementById('whack-score').textContent = whackScore;
+                initWhackAMole();
+            }
+        }
+
+        function updateWhackAMole() {
+            whackTime--;
+            document.getElementById('whack-time').textContent = whackTime;
+            
+            if (whackTime <= 0) {
+                gameOverWhackAMole();
+                return;
+            }
+
+            // Tạo mole mới
+            const emptyHoles = moles.map((mole, index) => !mole ? index : -1).filter(i => i !== -1);
+            if (emptyHoles.length > 0 && Math.random() < 0.3) {
+                const randomIndex = Math.floor(Math.random() * emptyHoles.length);
+                moles[emptyHoles[randomIndex]] = true;
+            }
+
+            // Xóa mole cũ
+            moles = moles.map(mole => mole && Math.random() < 0.1 ? false : mole);
+
+            initWhackAMole();
+        }
+
+        function gameOverWhackAMole() {
+            clearInterval(whackInterval);
+            alert(`Game Over! Điểm: ${whackScore}`);
+        }
+
+        function resetWhackAMole() {
+            moles = Array(9).fill(false);
+            whackScore = 0;
+            whackTime = 30;
+            document.getElementById('whack-score').textContent = '0';
+            document.getElementById('whack-time').textContent = '30';
+            clearInterval(whackInterval);
+            whackInterval = setInterval(updateWhackAMole, 1000);
+            initWhackAMole();
+        }
+
+        // Code cho Word Puzzle
+        const WORDS = ['HELLO', 'WORLD', 'GAME', 'PUZZLE', 'FUN', 'PLAY', 'LEARN', 'CODE'];
+        let wordPuzzle = [];
+        let selectedCells = [];
+        let wordPuzzleScore = 0;
+
+        function initWordPuzzle() {
+            const board = document.getElementById('wordPuzzleBoard');
+            board.innerHTML = '';
+            
+            // Tạo bảng chữ cái ngẫu nhiên
+            wordPuzzle = Array(10).fill().map(() => 
+                Array(10).fill().map(() => 
+                    String.fromCharCode(65 + Math.floor(Math.random() * 26))
+                )
+            );
+
+            // Thêm các từ vào bảng
+            WORDS.forEach(word => {
+                const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                const x = Math.floor(Math.random() * (10 - (direction === 'horizontal' ? word.length : 0)));
+                const y = Math.floor(Math.random() * (10 - (direction === 'vertical' ? word.length : 0)));
+                
+                for (let i = 0; i < word.length; i++) {
+                    if (direction === 'horizontal') {
+                        wordPuzzle[y][x + i] = word[i];
+                    } else {
+                        wordPuzzle[y + i][x] = word[i];
+                    }
+                }
+            });
+
+            // Vẽ bảng
+            wordPuzzle.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    const cellElement = document.createElement('div');
+                    cellElement.className = 'letter-cell';
+                    cellElement.textContent = cell;
+                    cellElement.onclick = () => selectCell(x, y);
+                    board.appendChild(cellElement);
+                });
+            });
+        }
+
+        function selectCell(x, y) {
+            const index = selectedCells.findIndex(cell => cell.x === x && cell.y === y);
+            if (index === -1) {
+                selectedCells.push({x, y});
+            } else {
+                selectedCells.splice(index, 1);
+            }
+            checkWord();
+            updateWordPuzzle();
+        }
+
+        function checkWord() {
+            if (selectedCells.length < 2) return;
+
+            const word = selectedCells
+                .sort((a, b) => a.x - b.x || a.y - b.y)
+                .map(cell => wordPuzzle[cell.y][cell.x])
+                .join('');
+
+            if (WORDS.includes(word)) {
+                wordPuzzleScore += word.length * 10;
+                document.getElementById('wordpuzzle-score').textContent = wordPuzzleScore;
+                selectedCells.forEach(cell => {
+                    wordPuzzle[cell.y][cell.x] = '';
+                });
+                selectedCells = [];
+                if (wordPuzzle.every(row => row.every(cell => cell === ''))) {
+                    alert(`Chúc mừng! Bạn đã hoàn thành với ${wordPuzzleScore} điểm!`);
+                    resetWordPuzzle();
+                }
+            }
+        }
+
+        function updateWordPuzzle() {
+            const cells = document.querySelectorAll('.letter-cell');
+            cells.forEach((cell, index) => {
+                const x = index % 10;
+                const y = Math.floor(index / 10);
+                cell.textContent = wordPuzzle[y][x];
+                cell.style.backgroundColor = selectedCells.some(c => c.x === x && c.y === y) 
+                    ? 'rgba(255, 255, 255, 0.3)' 
+                    : 'rgba(255, 255, 255, 0.1)';
+            });
+        }
+
+        function resetWordPuzzle() {
+            wordPuzzle = [];
+            selectedCells = [];
+            wordPuzzleScore = 0;
+            document.getElementById('wordpuzzle-score').textContent = '0';
+            initWordPuzzle();
+        }
+
+        // Event Listeners
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('tetris-game').classList.contains('active')) {
+                switch(e.key) {
+                    case 'ArrowLeft': moveLeft(); break;
+                    case 'ArrowRight': moveRight(); break;
+                    case 'ArrowDown': moveDown(); break;
+                    case 'ArrowUp': rotate(); break;
+                }
+            }
+            if (document.getElementById('pacman-game').classList.contains('active')) {
+                switch(e.key) {
+                    case 'ArrowUp': pacman.direction = 'up'; break;
+                    case 'ArrowDown': pacman.direction = 'down'; break;
+                    case 'ArrowLeft': pacman.direction = 'left'; break;
+                    case 'ArrowRight': pacman.direction = 'right'; break;
+                }
+            }
+            if (document.getElementById('breakout-game').classList.contains('active')) {
+                switch(e.key) {
+                    case 'ArrowLeft': paddle.x = Math.max(0, paddle.x - 20); break;
+                    case 'ArrowRight': paddle.x = Math.min(300, paddle.x + 20); break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
